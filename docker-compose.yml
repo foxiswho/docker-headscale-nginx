@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  headscale:
+    image: headscale/headscale
+    container_name: headscale
+    volumes:
+      - ./headscale/config:/etc/headscale
+      - ./headscale/data:/var/lib/headscale
+    ports:
+      - 8080:8080
+    command: headscale serve
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
+    restart: unless-stopped
+    networks:
+      - devbase
+  headscaleUi:
+    image: ghcr.io/gurucomputing/headscale-ui:latest
+    container_name: headscaleUi
+    ports:
+      - 65280:80
+    restart: unless-stopped
+    networks:
+      - devbase
+  nginx:
+    container_name: nginx
+    image: nginx
+    restart: always
+    ports:
+      - '93:93'
+      - '63289:63289'
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - devbase
+
+networks:
+  devbase:
+    external: true
